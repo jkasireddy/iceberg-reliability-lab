@@ -17,6 +17,26 @@ services:
         aliases:
           - warehouse.minio
 
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: iceberg-lab-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-orders}
+      POSTGRES_USER: ${POSTGRES_USER:-lab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lab_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lab} -d ${POSTGRES_DB:-orders}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - iceberg_net
+
   mc:
     image: minio/mc
     container_name: iceberg-lab-mc
@@ -59,7 +79,9 @@ services:
 
 volumes:
   minio_data:
+  postgres_data:
 
 networks:
   iceberg_net:
     driver: bridge
+

@@ -5,7 +5,9 @@ requires-python = ">=3.12"
 dependencies = [
     "faker>=40.37.0",
     "pandas>=3.0.5",
+    "psycopg[binary]>=3.3.4",
     "pyiceberg[pyarrow,s3fs]==0.11.1",
+    "python-dotenv>=1.2.3",
     "pyyaml>=6.0.3",
     "rich>=14.3.4",
     "typer>=0.27.1",
