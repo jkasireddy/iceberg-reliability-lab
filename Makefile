@@ -1,6 +1,7 @@
 .PHONY: up down seed load baseline corrupt compare check reset \
 	watermark changes extract apply crash-apply replay \
-	demo-corruption incremental-demo demo-late-arrival
+	demo-corruption incremental-demo demo-late-arrival \
+	test test-cov
 
 up:
 	docker compose up -d
@@ -110,3 +111,11 @@ demo-late-arrival:
 	$(MAKE) extract
 	$(MAKE) apply
 	$(MAKE) extract
+
+test:
+	uv run python -m pytest
+
+test-cov:
+	uv run python -m pytest \
+		--cov=src \
+		--cov-report=term-missing
