@@ -1,6 +1,6 @@
 .PHONY: up down seed load baseline corrupt compare check reset \
 	watermark changes extract apply crash-apply replay \
-	demo-corruption incremental-demo
+	demo-corruption incremental-demo demo-late-arrival
 
 up:
 	docker compose up -d
@@ -95,3 +95,18 @@ demo-crash-replay:
 		echo "Expected crash captured. Restarting pipeline..."
 	$(MAKE) extract
 	$(MAKE) apply
+
+late-arrival:
+	uv run python -m src.scenarios.late_arrival
+
+demo-late-arrival:
+	@echo ""
+	@echo "======================================"
+	@echo "       LATE ARRIVAL DEMO"
+	@echo "======================================"
+	@echo ""
+	$(MAKE) reset
+	$(MAKE) late-arrival
+	$(MAKE) extract
+	$(MAKE) apply
+	$(MAKE) extract
