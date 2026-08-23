@@ -8,7 +8,6 @@ import psycopg
 
 from src.config import postgres_connection_string
 
-
 RANDOM_SEED = 4242
 
 STATES = [
@@ -83,8 +82,7 @@ def generate_insert_rows() -> list[tuple]:
             (
                 order_id,
                 random.randint(10000, 25000),
-                order_base_time
-                + timedelta(seconds=offset),
+                order_base_time + timedelta(seconds=offset),
                 random.choice(STATES),
                 random.choice(PRODUCT_CATEGORIES),
                 quantity,
@@ -92,8 +90,7 @@ def generate_insert_rows() -> list[tuple]:
                 total_amount,
                 random.choice(PAYMENT_TYPES),
                 "PENDING",
-                change_base_time
-                + timedelta(seconds=offset),
+                change_base_time + timedelta(seconds=offset),
             )
         )
 
@@ -104,16 +101,12 @@ def main() -> None:
     new_orders = generate_insert_rows()
 
     with psycopg.connect(postgres_connection_string()) as conn:
-
         # 200 existing rows receive an update.
         #
         # Give every changed row a deterministic timestamp
         # after the original baseline watermark.
         for order_id in range(1, 201):
-            changed_at = (
-                datetime(2026, 8, 16, 9, 0, 0)
-                + timedelta(seconds=order_id)
-            )
+            changed_at = datetime(2026, 8, 16, 9, 0, 0) + timedelta(seconds=order_id)
 
             conn.execute(
                 """

@@ -6,10 +6,7 @@ from src.config import postgres_connection_string
 
 
 def main() -> None:
-    with psycopg.connect(
-        postgres_connection_string()
-    ) as conn:
-
+    with psycopg.connect(postgres_connection_string()) as conn:
         amount_update = conn.execute(
             """
             UPDATE orders
@@ -42,29 +39,16 @@ def main() -> None:
 
         conn.commit()
 
-        row_count = conn.execute(
-            "SELECT COUNT(*) FROM orders"
-        ).fetchone()[0]
+        row_count = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
 
         print("Injected controlled corruption")
-        print(
-            f"Invalid total_amount rows : "
-            f"{amount_update.rowcount}"
-        )
-        print(
-            f"Invalid quantity rows     : "
-            f"{quantity_update.rowcount}"
-        )
-        print(
-            f"Invalid state rows        : "
-            f"{state_update.rowcount}"
-        )
+        print(f"Invalid total_amount rows : {amount_update.rowcount}")
+        print(f"Invalid quantity rows     : {quantity_update.rowcount}")
+        print(f"Invalid state rows        : {state_update.rowcount}")
 
         print(f"\nSource row count          : {row_count:,}")
 
-        print(
-            "\nImportant: row count is still unchanged."
-        )
+        print("\nImportant: row count is still unchanged.")
 
 
 if __name__ == "__main__":

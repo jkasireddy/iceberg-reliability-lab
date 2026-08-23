@@ -6,7 +6,6 @@ from pathlib import Path
 from src.iceberg_lab.catalog import get_catalog
 from src.validation.profile import build_profile
 
-
 TABLE_NAME = "reliability.orders"
 BASELINE_PATH = Path("artifacts/baseline.json")
 
@@ -36,9 +35,7 @@ WATCHED_METRICS = {
 
 def main() -> None:
     if not BASELINE_PATH.exists():
-        raise RuntimeError(
-            "Baseline not found. Run capture_baseline first."
-        )
+        raise RuntimeError("Baseline not found. Run capture_baseline first.")
 
     with BASELINE_PATH.open() as file:
         baseline = json.load(file)
@@ -53,28 +50,18 @@ def main() -> None:
     print("      ICEBERG BASELINE COMPARISON")
     print("========================================")
 
-    print(
-        f"\nBaseline snapshot : "
-        f"{baseline['snapshot_id']}"
-    )
+    print(f"\nBaseline snapshot : {baseline['snapshot_id']}")
 
-    print(
-        f"Current snapshot  : "
-        f"{current['snapshot_id']}"
-    )
+    print(f"Current snapshot  : {current['snapshot_id']}")
 
     baseline_count = baseline["record_count"]
     current_count = current["record_count"]
 
     print("\n=== ROW COUNT CHECK ===")
 
-    print(
-        f"Baseline : {baseline_count:,}"
-    )
+    print(f"Baseline : {baseline_count:,}")
 
-    print(
-        f"Current  : {current_count:,}"
-    )
+    print(f"Current  : {current_count:,}")
 
     if baseline_count == current_count:
         print("Result   : PASS")
@@ -86,54 +73,26 @@ def main() -> None:
     print("\n=== METADATA DRIFT ===")
 
     for column, metric_names in WATCHED_METRICS.items():
-
         print(f"\n{column}")
 
         for metric_name in metric_names:
+            baseline_value = baseline["metrics"][column][metric_name]
 
-            baseline_value = (
-                baseline["metrics"]
-                [column]
-                [metric_name]
-            )
+            current_value = current["metrics"][column][metric_name]
 
-            current_value = (
-                current["metrics"]
-                [column]
-                [metric_name]
-            )
+            changed = baseline_value != current_value
 
-            changed = (
-                baseline_value
-                != current_value
-            )
-
-            status = (
-                "CHANGED"
-                if changed
-                else "same"
-            )
+            status = "CHANGED" if changed else "same"
 
             if changed:
                 drift_found = True
 
-            print(
-                f"  {metric_name:<12} "
-                f"{baseline_value} "
-                f"-> {current_value} "
-                f"[{status}]"
-            )
+            print(f"  {metric_name:<12} {baseline_value} -> {current_value} [{status}]")
 
     print("\n========================================")
 
-    if (
-        baseline_count == current_count
-        and drift_found
-    ):
-        print(
-            "ROW COUNT PASSED, "
-            "BUT ICEBERG METADATA DETECTED DRIFT"
-        )
+    if baseline_count == current_count and drift_found:
+        print("ROW COUNT PASSED, BUT ICEBERG METADATA DETECTED DRIFT")
 
     elif drift_found:
         print("METADATA DRIFT DETECTED")

@@ -6,7 +6,6 @@ from pathlib import Path
 from src.iceberg_lab.catalog import get_catalog
 from src.validation.profile import build_profile
 
-
 TABLE_NAME = "reliability.orders"
 BASELINE_PATH = Path("artifacts/baseline.json")
 

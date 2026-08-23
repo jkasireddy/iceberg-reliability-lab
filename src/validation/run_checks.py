@@ -10,7 +10,6 @@ from src.validation.rules import (
     null_count_rule,
 )
 
-
 TABLE_NAME = "reliability.orders"
 
 
@@ -29,9 +28,7 @@ def main() -> None:
         ),
         max_value_rule(
             "total_amount",
-            Decimal(
-                metrics["total_amount"]["upper_bound"]
-            ),
+            Decimal(metrics["total_amount"]["upper_bound"]),
             Decimal("2500.00"),
         ),
         allowed_upper_bound_rule(
@@ -72,10 +69,7 @@ def main() -> None:
     print("======================================")
 
     if failed:
-        print(
-            f"QUALITY GATE FAILED: "
-            f"{failed} rule(s) violated"
-        )
+        print(f"QUALITY GATE FAILED: {failed} rule(s) violated")
         raise SystemExit(1)
 
     print("QUALITY GATE PASSED")

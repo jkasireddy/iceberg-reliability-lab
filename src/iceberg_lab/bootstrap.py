@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import pyarrow as pa
-
 from pyiceberg.catalog import load_catalog
 from pyiceberg.schema import Schema
 from pyiceberg.types import (
@@ -135,10 +134,7 @@ def main():
         table.append(data)
         print(f"Appended {data.num_rows} rows")
     else:
-        print(
-            f"Table already contains {existing.num_rows} rows; "
-            "skipping bootstrap append"
-        )
+        print(f"Table already contains {existing.num_rows} rows; skipping bootstrap append")
 
     # Reload after commit.
     table.refresh()

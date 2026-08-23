@@ -6,7 +6,6 @@ from typing import Any
 
 from src.validation.metadata_inspector import aggregate_metric
 
-
 TRACKED_COLUMNS = [
     "order_id",
     "customer_id",
@@ -44,9 +43,7 @@ def build_profile(table, snapshot_id: int | None = None) -> dict[str, Any]:
 
         snapshot_id = snapshot.snapshot_id
 
-    data_files = table.inspect.data_files(
-        snapshot_id=snapshot_id
-    ).to_pylist()
+    data_files = table.inspect.data_files(snapshot_id=snapshot_id).to_pylist()
 
     metrics = {}
 
@@ -56,21 +53,12 @@ def build_profile(table, snapshot_id: int | None = None) -> dict[str, Any]:
             column,
         )
 
-        metrics[column] = {
-            key: normalize(value)
-            for key, value in raw_metrics.items()
-        }
+        metrics[column] = {key: normalize(value) for key, value in raw_metrics.items()}
 
     return {
         "snapshot_id": snapshot_id,
         "file_count": len(data_files),
-        "record_count": sum(
-            data_file["record_count"]
-            for data_file in data_files
-        ),
-        "file_size_in_bytes": sum(
-            data_file["file_size_in_bytes"]
-            for data_file in data_files
-        ),
+        "record_count": sum(data_file["record_count"] for data_file in data_files),
+        "file_size_in_bytes": sum(data_file["file_size_in_bytes"] for data_file in data_files),
         "metrics": metrics,
     }

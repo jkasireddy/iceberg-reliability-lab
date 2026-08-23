@@ -4,7 +4,6 @@ from typing import Any
 
 from src.iceberg_lab.catalog import get_catalog
 
-
 TABLE_NAME = "reliability.orders"
 
 
@@ -23,56 +22,26 @@ def aggregate_metric(
         column_metrics = metrics.get(column) or {}
 
         if column_metrics.get("value_count") is not None:
-            value_counts.append(
-                column_metrics["value_count"]
-            )
+            value_counts.append(column_metrics["value_count"])
 
         if column_metrics.get("null_value_count") is not None:
-            null_counts.append(
-                column_metrics["null_value_count"]
-            )
+            null_counts.append(column_metrics["null_value_count"])
 
         if column_metrics.get("nan_value_count") is not None:
-            nan_counts.append(
-                column_metrics["nan_value_count"]
-            )
+            nan_counts.append(column_metrics["nan_value_count"])
 
         if column_metrics.get("lower_bound") is not None:
-            lower_bounds.append(
-                column_metrics["lower_bound"]
-            )
+            lower_bounds.append(column_metrics["lower_bound"])
 
         if column_metrics.get("upper_bound") is not None:
-            upper_bounds.append(
-                column_metrics["upper_bound"]
-            )
+            upper_bounds.append(column_metrics["upper_bound"])
 
     return {
-        "value_count": (
-            sum(value_counts)
-            if value_counts
-            else None
-        ),
-        "null_count": (
-            sum(null_counts)
-            if null_counts
-            else None
-        ),
-        "nan_count": (
-            sum(nan_counts)
-            if nan_counts
-            else None
-        ),
-        "lower_bound": (
-            min(lower_bounds)
-            if lower_bounds
-            else None
-        ),
-        "upper_bound": (
-            max(upper_bounds)
-            if upper_bounds
-            else None
-        ),
+        "value_count": (sum(value_counts) if value_counts else None),
+        "null_count": (sum(null_counts) if null_counts else None),
+        "nan_count": (sum(nan_counts) if nan_counts else None),
+        "lower_bound": (min(lower_bounds) if lower_bounds else None),
+        "upper_bound": (max(upper_bounds) if upper_bounds else None),
     }
 
 
@@ -84,8 +53,7 @@ def print_snapshots(table) -> None:
     for snapshot in snapshots:
         marker = (
             " <-- CURRENT"
-            if snapshot["snapshot_id"]
-            == table.current_snapshot().snapshot_id
+            if snapshot["snapshot_id"] == table.current_snapshot().snapshot_id
             else ""
         )
 
@@ -117,15 +85,9 @@ def print_manifests(table) -> None:
 def print_file_summary(table) -> list[dict[str, Any]]:
     data_files = table.inspect.data_files().to_pylist()
 
-    total_records = sum(
-        data_file["record_count"]
-        for data_file in data_files
-    )
+    total_records = sum(data_file["record_count"] for data_file in data_files)
 
-    total_bytes = sum(
-        data_file["file_size_in_bytes"]
-        for data_file in data_files
-    )
+    total_bytes = sum(data_file["file_size_in_bytes"] for data_file in data_files)
 
     print("\n=== CURRENT ICEBERG DATA FILES ===")
     print(f"Data files       : {len(data_files)}")
@@ -173,26 +135,11 @@ def print_column_metrics(
         )
 
         print(f"\n{column}")
-        print(
-            f"  value count : "
-            f"{metrics['value_count']}"
-        )
-        print(
-            f"  null count  : "
-            f"{metrics['null_count']}"
-        )
-        print(
-            f"  NaN count   : "
-            f"{metrics['nan_count']}"
-        )
-        print(
-            f"  lower bound : "
-            f"{metrics['lower_bound']}"
-        )
-        print(
-            f"  upper bound : "
-            f"{metrics['upper_bound']}"
-        )
+        print(f"  value count : {metrics['value_count']}")
+        print(f"  null count  : {metrics['null_count']}")
+        print(f"  NaN count   : {metrics['nan_count']}")
+        print(f"  lower bound : {metrics['lower_bound']}")
+        print(f"  upper bound : {metrics['upper_bound']}")
 
 
 def main() -> None:
@@ -211,10 +158,7 @@ def main() -> None:
     current_snapshot = table.current_snapshot()
 
     if current_snapshot:
-        print(
-            f"Snapshot : "
-            f"{current_snapshot.snapshot_id}"
-        )
+        print(f"Snapshot : {current_snapshot.snapshot_id}")
 
     print_snapshots(table)
     print_manifests(table)
