@@ -3,8 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from src.iceberg_lab.catalog import get_catalog
-
-TABLE_NAME = "reliability.orders"
+from src.iceberg_lab.orders import ICEBERG_TABLE
+from src.validation.metrics import (
+    TRACKED_COLUMNS,
+    aggregate_column_metrics,
+)
 
 
 def aggregate_metric(
@@ -112,24 +115,11 @@ def print_file_summary(table) -> list[dict[str, Any]]:
 def print_column_metrics(
     data_files: list[dict[str, Any]],
 ) -> None:
-    columns = [
-        "order_id",
-        "customer_id",
-        "order_timestamp",
-        "state",
-        "product_category",
-        "quantity",
-        "unit_price",
-        "total_amount",
-        "payment_type",
-        "status",
-        "updated_at",
-    ]
 
     print("\n=== FILE-LEVEL COLUMN METRICS ===")
 
-    for column in columns:
-        metrics = aggregate_metric(
+    for column in TRACKED_COLUMNS:
+        metrics = aggregate_column_metrics(
             data_files,
             column,
         )
@@ -145,13 +135,13 @@ def print_column_metrics(
 def main() -> None:
     catalog = get_catalog()
 
-    table = catalog.load_table(TABLE_NAME)
+    table = catalog.load_table(ICEBERG_TABLE)
 
     print("===================================")
     print("     ICEBERG METADATA INSPECTOR")
     print("===================================")
 
-    print(f"\nTable    : {TABLE_NAME}")
+    print(f"\nTable    : {ICEBERG_TABLE}")
     print(f"Location : {table.location()}")
     print(f"Format   : Iceberg v{table.format_version}")
 

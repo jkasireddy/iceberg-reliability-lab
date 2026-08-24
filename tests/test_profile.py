@@ -18,9 +18,7 @@ def test_normalize_datetime() -> None:
         58,
     )
 
-    assert normalize(value) == (
-        "2026-08-15 03:35:58"
-    )
+    assert normalize(value) == ("2026-08-15 03:35:58")
 
 
 def test_normalize_date() -> None:

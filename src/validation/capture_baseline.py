@@ -1,33 +1,22 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from src.iceberg_lab.catalog import get_catalog
+from src.iceberg_lab.orders import ICEBERG_TABLE
+from src.validation.baseline import (
+    BASELINE_PATH,
+    save_baseline,
+)
 from src.validation.profile import build_profile
-
-TABLE_NAME = "reliability.orders"
-BASELINE_PATH = Path("artifacts/baseline.json")
 
 
 def main() -> None:
     catalog = get_catalog()
 
-    table = catalog.load_table(TABLE_NAME)
+    table = catalog.load_table(ICEBERG_TABLE)
 
     profile = build_profile(table)
 
-    BASELINE_PATH.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    with BASELINE_PATH.open("w") as file:
-        json.dump(
-            profile,
-            file,
-            indent=2,
-        )
+    save_baseline(profile)
 
     print("Healthy baseline captured")
     print(f"Snapshot ID : {profile['snapshot_id']}")

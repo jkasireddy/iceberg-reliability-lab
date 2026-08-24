@@ -4,21 +4,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from src.validation.metadata_inspector import aggregate_metric
-
-TRACKED_COLUMNS = [
-    "order_id",
-    "customer_id",
-    "order_timestamp",
-    "state",
-    "product_category",
-    "quantity",
-    "unit_price",
-    "total_amount",
-    "payment_type",
-    "status",
-    "updated_at",
-]
+from src.validation.metrics import (
+    TRACKED_COLUMNS,
+    aggregate_column_metrics,
+)
 
 
 def normalize(value: Any) -> Any:
@@ -48,7 +37,7 @@ def build_profile(table, snapshot_id: int | None = None) -> dict[str, Any]:
     metrics = {}
 
     for column in TRACKED_COLUMNS:
-        raw_metrics = aggregate_metric(
+        raw_metrics = aggregate_column_metrics(
             data_files,
             column,
         )
