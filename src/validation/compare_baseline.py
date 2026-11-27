@@ -1,141 +1,57 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from src.iceberg_lab.catalog import get_catalog
+from src.iceberg_lab.orders import ICEBERG_TABLE
+from src.validation.baseline import load_baseline
+from src.validation.comparison import compare_profiles
 from src.validation.profile import build_profile
 
 
-TABLE_NAME = "reliability.orders"
-BASELINE_PATH = Path("artifacts/baseline.json")
-
-WATCHED_METRICS = {
-    "quantity": [
-        "null_count",
-        "lower_bound",
-        "upper_bound",
-    ],
-    "total_amount": [
-        "null_count",
-        "lower_bound",
-        "upper_bound",
-    ],
-    "state": [
-        "null_count",
-        "lower_bound",
-        "upper_bound",
-    ],
-    "updated_at": [
-        "null_count",
-        "lower_bound",
-        "upper_bound",
-    ],
-}
-
-
 def main() -> None:
-    if not BASELINE_PATH.exists():
-        raise RuntimeError(
-            "Baseline not found. Run capture_baseline first."
-        )
-
-    with BASELINE_PATH.open() as file:
-        baseline = json.load(file)
+    baseline = load_baseline()
 
     catalog = get_catalog()
 
-    table = catalog.load_table(TABLE_NAME)
+    table = catalog.load_table(ICEBERG_TABLE)
 
     current = build_profile(table)
+
+    comparison = compare_profiles(
+        baseline,
+        current,
+    )
 
     print("========================================")
     print("      ICEBERG BASELINE COMPARISON")
     print("========================================")
 
-    print(
-        f"\nBaseline snapshot : "
-        f"{baseline['snapshot_id']}"
-    )
+    print(f"\nBaseline snapshot : {comparison.baseline_snapshot_id}")
 
-    print(
-        f"Current snapshot  : "
-        f"{current['snapshot_id']}"
-    )
-
-    baseline_count = baseline["record_count"]
-    current_count = current["record_count"]
+    print(f"Current snapshot  : {comparison.current_snapshot_id}")
 
     print("\n=== ROW COUNT CHECK ===")
 
-    print(
-        f"Baseline : {baseline_count:,}"
-    )
+    print(f"Baseline : {comparison.baseline_record_count:,}")
 
-    print(
-        f"Current  : {current_count:,}"
-    )
+    print(f"Current  : {comparison.current_record_count:,}")
 
-    if baseline_count == current_count:
-        print("Result   : PASS")
-    else:
-        print("Result   : FAIL")
-
-    drift_found = False
+    print(f"Result   : {'PASS' if comparison.row_count_matches else 'FAIL'}")
 
     print("\n=== METADATA DRIFT ===")
 
-    for column, metric_names in WATCHED_METRICS.items():
+    for change in comparison.metric_changes:
+        status = "CHANGED" if change.changed else "same"
 
-        print(f"\n{column}")
+        print(f"\n{change.column}" if change.metric == "null_count" else "")
 
-        for metric_name in metric_names:
-
-            baseline_value = (
-                baseline["metrics"]
-                [column]
-                [metric_name]
-            )
-
-            current_value = (
-                current["metrics"]
-                [column]
-                [metric_name]
-            )
-
-            changed = (
-                baseline_value
-                != current_value
-            )
-
-            status = (
-                "CHANGED"
-                if changed
-                else "same"
-            )
-
-            if changed:
-                drift_found = True
-
-            print(
-                f"  {metric_name:<12} "
-                f"{baseline_value} "
-                f"-> {current_value} "
-                f"[{status}]"
-            )
+        print(f"  {change.metric:<12} {change.baseline} -> {change.current} [{status}]")
 
     print("\n========================================")
 
-    if (
-        baseline_count == current_count
-        and drift_found
-    ):
-        print(
-            "ROW COUNT PASSED, "
-            "BUT ICEBERG METADATA DETECTED DRIFT"
-        )
+    if comparison.row_count_matches and comparison.has_metadata_drift:
+        print("ROW COUNT PASSED, BUT ICEBERG METADATA DETECTED DRIFT")
 
-    elif drift_found:
+    elif comparison.has_metadata_drift:
         print("METADATA DRIFT DETECTED")
 
     else:

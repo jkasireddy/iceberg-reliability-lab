@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import argparse
-import os
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 import psycopg
-from faker import Faker
 
+from src.config import postgres_connection_string
 
 RANDOM_SEED = 42
 
@@ -51,22 +50,6 @@ STATUSES = [
 ]
 
 
-def connection_string() -> str:
-    host = os.getenv("POSTGRES_HOST", "localhost")
-    port = os.getenv("POSTGRES_PORT", "5432")
-    database = os.getenv("POSTGRES_DB", "orders")
-    user = os.getenv("POSTGRES_USER", "lab")
-    password = os.getenv("POSTGRES_PASSWORD", "lab_password")
-
-    return (
-        f"host={host} "
-        f"port={port} "
-        f"dbname={database} "
-        f"user={user} "
-        f"password={password}"
-    )
-
-
 def create_table(conn: psycopg.Connection) -> None:
     conn.execute(
         """
@@ -89,28 +72,19 @@ def create_table(conn: psycopg.Connection) -> None:
 
 def generate_orders(row_count: int) -> list[tuple]:
     random.seed(RANDOM_SEED)
-    Faker.seed(RANDOM_SEED)
-
-    fake = Faker()
 
     base_time = datetime(2026, 8, 1, 0, 0, 0)
 
     rows = []
 
     for index in range(1, row_count + 1):
-        order_timestamp = base_time + timedelta(
-            seconds=random.randint(0, 14 * 24 * 60 * 60)
-        )
+        order_timestamp = base_time + timedelta(seconds=random.randint(0, 14 * 24 * 60 * 60))
 
-        updated_at = order_timestamp + timedelta(
-            minutes=random.randint(0, 240)
-        )
+        updated_at = order_timestamp + timedelta(minutes=random.randint(0, 240))
 
         quantity = random.randint(1, 5)
 
-        unit_price = Decimal(
-            str(round(random.uniform(5.00, 500.00), 2))
-        )
+        unit_price = Decimal(str(round(random.uniform(5.00, 500.00), 2)))
 
         total_amount = unit_price * quantity
 
@@ -136,7 +110,7 @@ def generate_orders(row_count: int) -> list[tuple]:
 def seed(row_count: int) -> None:
     rows = generate_orders(row_count)
 
-    with psycopg.connect(connection_string()) as conn:
+    with psycopg.connect(postgres_connection_string()) as conn:
         create_table(conn)
 
         conn.execute("TRUNCATE TABLE orders")

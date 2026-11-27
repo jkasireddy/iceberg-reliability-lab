@@ -5,7 +5,7 @@ from datetime import datetime
 import psycopg
 
 from src.config import postgres_connection_string
-
+from src.iceberg_lab.source import source_high_watermark
 
 PIPELINE_NAME = "orders_to_iceberg"
 
@@ -30,27 +30,10 @@ def initialize_watermark() -> tuple[datetime, int]:
 
     This should be called after the baseline/full load.
     """
+    last_updated_at, last_order_id = source_high_watermark()
 
     with psycopg.connect(postgres_connection_string()) as conn:
         ensure_control_table(conn)
-
-        result = conn.execute(
-            """
-            SELECT
-                updated_at,
-                order_id
-            FROM orders
-            ORDER BY
-                updated_at DESC,
-                order_id DESC
-            LIMIT 1
-            """
-        ).fetchone()
-
-        if result is None:
-            raise RuntimeError("Cannot initialize watermark: orders is empty")
-
-        last_updated_at, last_order_id = result
 
         conn.execute(
             """
@@ -92,9 +75,7 @@ def get_watermark() -> tuple[datetime, int]:
         ).fetchone()
 
         if result is None:
-            raise RuntimeError(
-                "Pipeline watermark has not been initialized"
-            )
+            raise RuntimeError("Pipeline watermark has not been initialized")
 
         return result[0], result[1]
 

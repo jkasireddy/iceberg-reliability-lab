@@ -4,22 +4,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from src.validation.metadata_inspector import aggregate_metric
-
-
-TRACKED_COLUMNS = [
-    "order_id",
-    "customer_id",
-    "order_timestamp",
-    "state",
-    "product_category",
-    "quantity",
-    "unit_price",
-    "total_amount",
-    "payment_type",
-    "status",
-    "updated_at",
-]
+from src.validation.metrics import (
+    TRACKED_COLUMNS,
+    aggregate_column_metrics,
+)
 
 
 def normalize(value: Any) -> Any:
@@ -44,33 +32,22 @@ def build_profile(table, snapshot_id: int | None = None) -> dict[str, Any]:
 
         snapshot_id = snapshot.snapshot_id
 
-    data_files = table.inspect.data_files(
-        snapshot_id=snapshot_id
-    ).to_pylist()
+    data_files = table.inspect.data_files(snapshot_id=snapshot_id).to_pylist()
 
     metrics = {}
 
     for column in TRACKED_COLUMNS:
-        raw_metrics = aggregate_metric(
+        raw_metrics = aggregate_column_metrics(
             data_files,
             column,
         )
 
-        metrics[column] = {
-            key: normalize(value)
-            for key, value in raw_metrics.items()
-        }
+        metrics[column] = {key: normalize(value) for key, value in raw_metrics.items()}
 
     return {
         "snapshot_id": snapshot_id,
         "file_count": len(data_files),
-        "record_count": sum(
-            data_file["record_count"]
-            for data_file in data_files
-        ),
-        "file_size_in_bytes": sum(
-            data_file["file_size_in_bytes"]
-            for data_file in data_files
-        ),
+        "record_count": sum(data_file["record_count"] for data_file in data_files),
+        "file_size_in_bytes": sum(data_file["file_size_in_bytes"] for data_file in data_files),
         "metrics": metrics,
     }

@@ -18,10 +18,7 @@ def max_value_rule(
     actual: Any,
     maximum: Any,
 ) -> ValidationResult:
-    passed = (
-        actual is not None
-        and actual <= maximum
-    )
+    passed = actual is not None and actual <= maximum
 
     return ValidationResult(
         rule="max_value",
@@ -37,10 +34,7 @@ def allowed_upper_bound_rule(
     actual: Any,
     maximum_allowed: str,
 ) -> ValidationResult:
-    passed = (
-        actual is not None
-        and actual <= maximum_allowed
-    )
+    passed = actual is not None and actual <= maximum_allowed
 
     return ValidationResult(
         rule="allowed_upper_bound",
@@ -56,10 +50,7 @@ def null_count_rule(
     actual: int | None,
     maximum_nulls: int = 0,
 ) -> ValidationResult:
-    passed = (
-        actual is not None
-        and actual <= maximum_nulls
-    )
+    passed = actual is not None and actual <= maximum_nulls
 
     return ValidationResult(
         rule="null_count",

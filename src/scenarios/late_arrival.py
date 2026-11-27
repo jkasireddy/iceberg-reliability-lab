@@ -8,17 +8,13 @@ import psycopg
 from src.config import postgres_connection_string
 from src.ingestion.watermark import get_watermark
 
-
 LATE_ORDER_ID = 20001
 
 
 def main() -> None:
     last_updated_at, last_order_id = get_watermark()
 
-    with psycopg.connect(
-        postgres_connection_string()
-    ) as conn:
-
+    with psycopg.connect(postgres_connection_string()) as conn:
         result = conn.execute(
             """
             SELECT MAX(order_timestamp)
@@ -27,9 +23,7 @@ def main() -> None:
         ).fetchone()
 
         if result is None or result[0] is None:
-            raise RuntimeError(
-                "Cannot determine baseline event-time cutoff"
-            )
+            raise RuntimeError("Cannot determine baseline event-time cutoff")
 
         baseline_event_cutoff = result[0]
 
@@ -37,19 +31,13 @@ def main() -> None:
         # The order actually happened seven days
         # BEFORE the latest event time we already processed.
         #
-        late_order_timestamp = (
-            baseline_event_cutoff
-            - timedelta(days=7)
-        )
+        late_order_timestamp = baseline_event_cutoff - timedelta(days=7)
 
         #
         # But the source only receives/changes the record
         # AFTER our existing change watermark.
         #
-        arrival_updated_at = (
-            last_updated_at
-            + timedelta(hours=6)
-        )
+        arrival_updated_at = last_updated_at + timedelta(hours=6)
 
         conn.execute(
             """
@@ -150,62 +138,30 @@ def main() -> None:
     print("          LATE ARRIVAL SCENARIO")
     print("======================================")
 
-    print(
-        f"\nBaseline event cutoff : "
-        f"{baseline_event_cutoff}"
-    )
+    print(f"\nBaseline event cutoff : {baseline_event_cutoff}")
 
-    print(
-        f"Current CDC watermark : "
-        f"{last_updated_at} / {last_order_id}"
-    )
+    print(f"Current CDC watermark : {last_updated_at} / {last_order_id}")
 
     print("\nLate-arriving order")
-    print(
-        f"  order_id        : {LATE_ORDER_ID}"
-    )
-    print(
-        f"  order_timestamp : {late_order_timestamp}"
-    )
-    print(
-        f"  updated_at      : {arrival_updated_at}"
-    )
+    print(f"  order_id        : {LATE_ORDER_ID}")
+    print(f"  order_timestamp : {late_order_timestamp}")
+    print(f"  updated_at      : {arrival_updated_at}")
 
-    print(
-        f"\nSource rows       : {source_count:,}"
-    )
+    print(f"\nSource rows       : {source_count:,}")
 
     print("\n=== CURSOR COMPARISON ===")
 
-    print(
-        "Event-time cursor "
-        f"would extract : {naive_event_time_count}"
-    )
+    print(f"Event-time cursor would extract : {naive_event_time_count}")
 
-    print(
-        "Change-time cursor "
-        f"will extract  : {change_time_count}"
-    )
+    print(f"Change-time cursor will extract  : {change_time_count}")
 
     print("\n======================================")
 
-    if (
-        naive_event_time_count == 0
-        and change_time_count == 1
-    ):
-        print(
-            "LATE ARRIVAL WOULD BE MISSED "
-            "BY EVENT-TIME WATERMARK"
-        )
-        print(
-            "CHANGE-TIME WATERMARK "
-            "CAPTURES IT"
-        )
+    if naive_event_time_count == 0 and change_time_count == 1:
+        print("LATE ARRIVAL WOULD BE MISSED BY EVENT-TIME WATERMARK")
+        print("CHANGE-TIME WATERMARK CAPTURES IT")
     else:
-        print(
-            "Unexpected scenario result — "
-            "check source state."
-        )
+        print("Unexpected scenario result — check source state.")
 
     print("======================================")
 
